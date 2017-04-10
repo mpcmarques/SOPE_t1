@@ -1,6 +1,9 @@
 #ifndef S_FIND_H
 #define  S_FIND_H
 
+/*
+* includes
+*/
 #include <stdio.h>
 #include <string.h>
 #include <stdio.h>
@@ -11,13 +14,17 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include "options.h"
+#include <wait.h>
 
 
-
-
-void startSearch(const char *searchType, const char *searchParameter, const char*fileName, const char* command);
-
-
+int sfind(const char searchedText[], const char pathname[], const char command[]);
+/**
+* @param pathname String with pathname
+* @param searchedText File name
+* @param command Command
+*/
+int handleFork(char pathname[], const char searchedText[], const char command[]);
 
 
 

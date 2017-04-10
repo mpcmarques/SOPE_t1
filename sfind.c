@@ -1,16 +1,6 @@
 #include "sfind.h"
 
 
-
-void getDefaultPath(char path[]){
-  char pathname[1024];
-
-  if (getcwd(pathname, sizeof(pathname)) != NULL){
-    strcpy(path, pathname);
-  }else
-  perror("getcwd() error");
-}
-
 /**
 *  Founded file action handler
 */
@@ -30,8 +20,20 @@ void handleFoundFile(struct dirent dirent, const char path[], const char command
   }
 }
 
-int sfind(const char searchedText[], const char pathname[], const char command[]){
-  struct dirent *dirent = NULL;
+void createSubpath(const char *originalPath, struct dirent *directory, char *finalPath){
+  char newPath[1024];
+  //  Create new path
+  strcpy(newPath, originalPath);
+  strcat(newPath, "/");
+  strcat(newPath, directory->d_name);
+  //  Modify final path
+  strcpy(finalPath, newPath);
+}
+
+int handleFork(char pathname[], const char searchedText[], const char command[]){
+  struct dirent *dirent;
+
+  printf("--beginning of process: %d\n", getpid());
 
   //  Open directory
   DIR *directory = opendir(pathname);
@@ -40,66 +42,93 @@ int sfind(const char searchedText[], const char pathname[], const char command[]
   {
     //printf("Directory opened\n");
   }
-  else
-  perror("opendir() error");
+  else {
+    perror("opendir() error");
+    exit(1);
+  }
 
-  //  Read directory file
+  //  abrir pasta
+  while ((dirent = readdir(directory))){
+    printf("Ficheiro: %s\n", dirent->d_name);
 
-  while ((dirent = readdir(directory))) {
-
+    //  Check if dirent name is equal to file
+    if (strcmp(dirent->d_name, searchedText) == 0) {
+      handleFoundFile(*dirent, pathname, command);
+      exit(0);
+    }
     //  Check if dirent is a directory, and is diferent from "." and ".."
-    if (dirent->d_type == DT_DIR &&
+    else if (dirent->d_type == DT_DIR &&
       strcmp(dirent->d_name, "..") != 0 &&
       strcmp(dirent->d_name, ".") != 0){
         //  Found a directory, search in directory
         char newPath[1024];
+        createSubpath(pathname, dirent, newPath);
 
-        //  Create new path
-        strcpy(newPath, pathname);
-        strcat(newPath, "/");
-        strcat(newPath, dirent->d_name);
-
-        //  Search in new path recursively
-        sfind(searchedText, newPath, command);
-
-      }
-
-      //  If dirent name is equal searched text, print path
-      if (strcmp(dirent->d_name, searchedText) == 0) {
-        handleFoundFile(*dirent, pathname, command);
+        //  FORK: create two process
+        handleFork(newPath, searchedText, command);
       }
     }
 
+    printf("--end of process: %d\n", getpid());
 
-    closedir(directory);
-    return 1;
+    exit(0);
   }
 
-  /**
-  * Return home path
-  */
+  int sfind(const char searchedText[], const char pathname[], const char command[]){
+    struct dirent *dirent = NULL;
 
-  void getHomePath(char pathname[]){
-    struct passwd *info = getpwuid(getuid());
+    //  Open directory
+    DIR *directory = opendir(pathname);
 
-    strcpy(pathname, info->pw_dir);
-  }
-
-  void startSearch(const char *searchType, const char *searchParameter, const char*fileName, const char* command){
-    char pathname[1024];
-
-    // searchtypes possibles : . ~ /
-    // .
-    if (strcmp(searchType, ".") == 0 ){
-      getDefaultPath(pathname);
+    if (directory != NULL)
+    {
+      //printf("Directory opened\n");
     }
-    else if(strcmp(searchType, "~") == 0){
-      getHomePath(pathname);
+    else
+    perror("opendir() error");
+
+    //  FORK process
+    pid_t pid = fork();
+
+    if (pid < 0) {
+      abort();
+    } else if (pid == 0){
+      // Child process
+      printf("Child process: %d\n",getpid());
+      //  Read directory file
+
+      while ((dirent = readdir(directory))) {
+        printf("File analized: %s\n", dirent->d_name);
+        //  Check if dirent is a directory, and is diferent from "." and ".."
+        //  If dirent name is equal searched text, print path
+        if (strcmp(dirent->d_name, searchedText) == 0) {
+          handleFoundFile(*dirent, pathname, command);
+          exit(0);
+        }
+        else if (dirent->d_type == DT_DIR &&
+          strcmp(dirent->d_name, "..") != 0 &&
+          strcmp(dirent->d_name, ".") != 0){
+            //  Found a directory, search in directory
+            char newPath[1024];
+
+            //  Create new path
+            createSubpath(pathname, dirent, newPath);
+
+            //  Search in new path recursively
+            //sfind(searchedText, newPath, command);
+          }
+        }
+      }
+      else if (pid > 0){
+        //  Parent process
+        printf("Parent process: %d\n", getpid());
+
+        int status;
+        waitpid(pid, &status, 0);
+      }
+
+      printf("--end of the process: %d\n", getpid());
+
+      closedir(directory);
+      exit(0);
     }
-
-    //  searchparameters possibles : -name -type -perm
-
-    //  commands possible: -delete -read
-    printf("Sarch start at path: %s\n", pathname);
-    sfind(fileName, pathname, command);
-  }
