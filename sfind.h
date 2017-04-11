@@ -19,12 +19,6 @@
 
 
 int sfind(const char searchedText[], const char pathname[], const char command[]);
-/**
-* @param pathname String with pathname
-* @param searchedText File name
-* @param command Command
-*/
-int handleFork(char pathname[], const char searchedText[], const char command[]);
 
 
 

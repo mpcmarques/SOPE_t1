@@ -18,6 +18,8 @@ void handleFoundFile(struct dirent dirent, const char path[], const char command
   else if (strcmp(command, "-delete") == 0){
     remove(newPath);
   }
+
+  exit(0);
 }
 
 void createSubpath(const char *originalPath, struct dirent *directory, char *finalPath){
@@ -30,10 +32,26 @@ void createSubpath(const char *originalPath, struct dirent *directory, char *fin
   strcpy(finalPath, newPath);
 }
 
-int handleFork(char pathname[], const char searchedText[], const char command[]){
-  struct dirent *dirent;
+void handleFork(const char searchedText[],const char pathname[], const char command[]){
+  //  FORK process
+  pid_t pid = fork();
 
-  printf("--beginning of process: %d\n", getpid());
+  if (pid < 0 ) {
+    perror("error forking");
+    abort();
+
+  } else if (pid > 0) {
+    /* parent */
+    int status;
+    waitpid(pid, &status, 0);
+  } else  if (pid == 0){
+    /* child*/
+    sfind(searchedText, pathname, command);
+  }
+}
+
+int sfind(const char searchedText[], const char pathname[], const char command[]){
+  struct dirent *dirent = NULL;
 
   //  Open directory
   DIR *directory = opendir(pathname);
@@ -42,19 +60,17 @@ int handleFork(char pathname[], const char searchedText[], const char command[])
   {
     //printf("Directory opened\n");
   }
-  else {
-    perror("opendir() error");
-    exit(1);
-  }
+  else
+  perror("opendir() error");
 
-  //  abrir pasta
-  while ((dirent = readdir(directory))){
-    printf("Ficheiro: %s\n", dirent->d_name);
+  //  Read directory file
 
-    //  Check if dirent name is equal to file
+  while ((dirent = readdir(directory))) {
+
+
+    //  If dirent name is equal searched text, print path
     if (strcmp(dirent->d_name, searchedText) == 0) {
       handleFoundFile(*dirent, pathname, command);
-      exit(0);
     }
     //  Check if dirent is a directory, and is diferent from "." and ".."
     else if (dirent->d_type == DT_DIR &&
@@ -62,73 +78,18 @@ int handleFork(char pathname[], const char searchedText[], const char command[])
       strcmp(dirent->d_name, ".") != 0){
         //  Found a directory, search in directory
         char newPath[1024];
-        createSubpath(pathname, dirent, newPath);
 
-        //  FORK: create two process
-        handleFork(newPath, searchedText, command);
+        //  Create new path
+        strcpy(newPath, pathname);
+        strcat(newPath, "/");
+        strcat(newPath, dirent->d_name);
+
+        //  Search in new path recursively
+        handleFork(searchedText, newPath, command);
       }
     }
 
-    printf("--end of process: %d\n", getpid());
 
+    closedir(directory);
     exit(0);
   }
-
-  int sfind(const char searchedText[], const char pathname[], const char command[]){
-    struct dirent *dirent = NULL;
-
-    //  Open directory
-    DIR *directory = opendir(pathname);
-
-    if (directory != NULL)
-    {
-      //printf("Directory opened\n");
-    }
-    else
-    perror("opendir() error");
-
-    //  FORK process
-    pid_t pid = fork();
-
-    if (pid < 0) {
-      abort();
-    } else if (pid == 0){
-      // Child process
-      printf("Child process: %d\n",getpid());
-      //  Read directory file
-
-      while ((dirent = readdir(directory))) {
-        printf("File analized: %s\n", dirent->d_name);
-        //  Check if dirent is a directory, and is diferent from "." and ".."
-        //  If dirent name is equal searched text, print path
-        if (strcmp(dirent->d_name, searchedText) == 0) {
-          handleFoundFile(*dirent, pathname, command);
-          exit(0);
-        }
-        else if (dirent->d_type == DT_DIR &&
-          strcmp(dirent->d_name, "..") != 0 &&
-          strcmp(dirent->d_name, ".") != 0){
-            //  Found a directory, search in directory
-            char newPath[1024];
-
-            //  Create new path
-            createSubpath(pathname, dirent, newPath);
-
-            //  Search in new path recursively
-            //sfind(searchedText, newPath, command);
-          }
-        }
-      }
-      else if (pid > 0){
-        //  Parent process
-        printf("Parent process: %d\n", getpid());
-
-        int status;
-        waitpid(pid, &status, 0);
-      }
-
-      printf("--end of the process: %d\n", getpid());
-
-      closedir(directory);
-      exit(0);
-    }

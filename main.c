@@ -74,7 +74,10 @@ void parseArguments(char *argv[]){
   }
   else if (strcmp(searchParameter, PARAM_PERM) == 0){
 
+  } else {
+    printf("Invalid search parameter, possibles: '%s' '%s' '%s'\n",PARAM_NAME, PARAM_TYPE, PARAM_PERM);
   }
+
 
   //  Command parameter '-print', '-delete', '-exec'
   if ((command = argv[4]) == NULL) {
@@ -86,7 +89,9 @@ void parseArguments(char *argv[]){
   else if (strcmp(command, CMD_DELETE) == 0){
 
   }
-  else if (strcmp(command, CMD_EXECUTE) == 0){}
+  else if (strcmp(command, CMD_EXECUTE) == 0){} else {
+    printf("Invalid command: possibles: '%s' '%s' '%s'\n",CMD_PRINT,CMD_DELETE, CMD_EXECUTE);
+  }
 
 
   //  start search
