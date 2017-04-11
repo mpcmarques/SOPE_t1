@@ -32,10 +32,10 @@ void getHomePath(char pathname[]){
 int main(int argc, char *argv[]) {
 
   //  Check for invalid arguments
-  if (argc >= 4 && argc < 6) {
+  if (argc >= 4 && argc < 6 && argv[1] != NULL && argv[2] != NULL && argv[3] != NULL && argv[4] != NULL) {
     parseArguments(argv);
   } else {
-    printf("Usage:\n sfind [ '.', '/', '~' ] ['-name', '-type', '-perm'] [file] ['-print', '-delete', '-exec']\n");
+    printf("Usage: sfind [ '.', '/', '~' ] ['-name', '-type', '-perm'] [file] ['-print', '-delete', '-exec']\n");
     exit(1);
   }
 }
@@ -43,16 +43,13 @@ int main(int argc, char *argv[]) {
 void parseArguments(char *argv[]){
   char pathname[1024];
   //  arguments to parse
-  char *searchDirectory;
-  char *searchParameter;
-  char *fileName;
-  char *command;
+  char *searchDirectory = argv[1];
+  char *searchParameter = argv[2];
+  unsigned char *fileName = (unsigned char*)argv[3];
+  char *command = argv[4];
 
   //  Directory '.','/','~'
-  if ((searchDirectory = argv[1]) == NULL) {
-    /* code */
-  }
-  else if (strcmp(searchDirectory, DIR_CURRENT) == 0){
+  if (strcmp(searchDirectory, DIR_CURRENT) == 0){
     getCurrentPath(pathname);
   }
   else if (strcmp(searchDirectory, DIR_HOME) == 0){
@@ -63,27 +60,37 @@ void parseArguments(char *argv[]){
   }
 
   //  Search parameter '-name', '-type', '-perm'
-  if ((searchParameter = argv[2]) == NULL) {
-    /* code */
-  }
-  else if (strcmp(searchParameter, PARAM_NAME) == 0){
-      if((fileName = argv[3]) != NULL){}
+  if (strcmp(searchParameter, PARAM_NAME) == 0){
+    fileName = (unsigned char*)argv[3];
   }
   else if (strcmp(searchParameter, PARAM_TYPE) == 0){
-
+    fileName = (unsigned char*)argv[3];
+    //  file
+    if (*fileName == 'f') {
+      *fileName = DT_REG;
+    }
+    //  directory
+    else if(*fileName == 'd'){
+      *fileName = DT_DIR;
+    }
+    //  symbolic link
+    else if (*fileName == 'l') {
+      *fileName = DT_LNK;
+    } else {
+      printf("Invalid search type, possibles are: '%s' '%s' '%s'\n", "'f'- files", "'d' - directory", "'l' - symbolic link");
+      exit(1);
+    }
   }
   else if (strcmp(searchParameter, PARAM_PERM) == 0){
 
   } else {
     printf("Invalid search parameter, possibles: '%s' '%s' '%s'\n",PARAM_NAME, PARAM_TYPE, PARAM_PERM);
+    exit(1);
   }
 
 
   //  Command parameter '-print', '-delete', '-exec'
-  if ((command = argv[4]) == NULL) {
-    /* code */
-  }
-  else if (strcmp(command, CMD_PRINT) == 0){
+  if (strcmp(command, CMD_PRINT) == 0){
 
   }
   else if (strcmp(command, CMD_DELETE) == 0){
@@ -91,10 +98,10 @@ void parseArguments(char *argv[]){
   }
   else if (strcmp(command, CMD_EXECUTE) == 0){} else {
     printf("Invalid command: possibles: '%s' '%s' '%s'\n",CMD_PRINT,CMD_DELETE, CMD_EXECUTE);
+    exit(1);
   }
-
 
   //  start search
   printf("Sarch start at path: %s\n", pathname);
-  sfind(fileName, pathname, command);
+  sfind(fileName, searchDirectory, command, searchParameter);
 }

@@ -19,7 +19,7 @@ void handleFoundFile(struct dirent dirent, const char path[], const char command
     remove(newPath);
   }
 
-  exit(0);
+  //exit(0);
 }
 
 void createSubpath(const char *originalPath, struct dirent *directory, char *finalPath){
@@ -32,7 +32,7 @@ void createSubpath(const char *originalPath, struct dirent *directory, char *fin
   strcpy(finalPath, newPath);
 }
 
-void handleFork(const char searchedText[],const char pathname[], const char command[]){
+void handleFork(const unsigned char *searchedText,const char pathname[], const char command[], const char searchParameter[]){
   //  FORK process
   pid_t pid = fork();
 
@@ -46,11 +46,11 @@ void handleFork(const char searchedText[],const char pathname[], const char comm
     waitpid(pid, &status, 0);
   } else  if (pid == 0){
     /* child*/
-    sfind(searchedText, pathname, command);
+    sfind(searchedText, pathname, command, searchParameter);
   }
 }
 
-int sfind(const char searchedText[], const char pathname[], const char command[]){
+int sfind(const unsigned char *searchedText, const char pathname[], const char command[], const char searchParameter[]){
   struct dirent *dirent = NULL;
 
   //  Open directory
@@ -67,11 +67,15 @@ int sfind(const char searchedText[], const char pathname[], const char command[]
 
   while ((dirent = readdir(directory))) {
 
-
-    //  If dirent name is equal searched text, print path
-    if (strcmp(dirent->d_name, searchedText) == 0) {
+    //  If dirent name is equal searched name text, handle it.
+    if (strcmp(PARAM_NAME, searchParameter)== 0 && strcmp(dirent->d_name, (char*)searchedText) == 0) {
+        handleFoundFile(*dirent, pathname, command);
+    }
+    //  If dirent type is equal file searched type
+    else if (strcmp(PARAM_TYPE, searchParameter) == 0 && dirent->d_type == *searchedText) {
       handleFoundFile(*dirent, pathname, command);
     }
+
     //  Check if dirent is a directory, and is diferent from "." and ".."
     else if (dirent->d_type == DT_DIR &&
       strcmp(dirent->d_name, "..") != 0 &&
@@ -85,10 +89,9 @@ int sfind(const char searchedText[], const char pathname[], const char command[]
         strcat(newPath, dirent->d_name);
 
         //  Search in new path recursively
-        handleFork(searchedText, newPath, command);
+        handleFork(searchedText, newPath, command, searchParameter);
       }
     }
-
 
     closedir(directory);
     exit(0);
