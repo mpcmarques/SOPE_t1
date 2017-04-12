@@ -45,7 +45,7 @@ void parseArguments(char *argv[]){
   //  arguments to parse
   char *searchDirectory = argv[1];
   char *searchParameter = argv[2];
-  unsigned char *fileName = (unsigned char*)argv[3];
+  char *fileName = argv[3];
   char *command = argv[4];
 
   //  Directory '.','/','~'
@@ -62,11 +62,11 @@ void parseArguments(char *argv[]){
   //  Search parameter '-name', '-type', '-perm'
   //  parameter name
   if (strcmp(searchParameter, PARAM_NAME) == 0){
-    fileName = (unsigned char*)argv[3];
+    fileName = argv[3];
   }
   //  parameter type
   else if (strcmp(searchParameter, PARAM_TYPE) == 0){
-    fileName = (unsigned char*)argv[3];
+    fileName = argv[3];
     //  file
     if (*fileName == 'f') {
       *fileName = DT_REG;
@@ -88,13 +88,11 @@ void parseArguments(char *argv[]){
     int i;
     //  check if argument is number
     if ((i = atoi(argv[3]))){
-      fileName = (unsigned char*)argv[3];
-      printf("%s\n", fileName);
+      fileName = argv[3];
     } else {
       printf("Invalid search permission, it should be a integer number\n");
       exit(1);
     }
-
   } else {
     printf("Invalid search parameter, possibles: '%s' '%s' '%s'\n",PARAM_NAME, PARAM_TYPE, PARAM_PERM);
     exit(1);

@@ -6,7 +6,6 @@
 */
 #include <stdio.h>
 #include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <ctype.h>
@@ -18,7 +17,7 @@
 #include <wait.h>
 
 
-int sfind(const unsigned char *searchedText, const char pathname[], const char command[], const char searchParameter[]);
+int sfind(const char *searchedText, const char pathname[], const char command[], const char searchParameter[]);
 
 
 
