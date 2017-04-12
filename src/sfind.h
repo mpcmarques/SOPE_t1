@@ -5,12 +5,12 @@
 * includes
 */
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <ctype.h>
 #include <pwd.h>
 #include <sys/stat.h>
+#include "str.h"
 #include <sys/types.h>
 #include <dirent.h>
 #include "options.h"
