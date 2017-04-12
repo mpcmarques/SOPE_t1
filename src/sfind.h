@@ -17,7 +17,7 @@
 #include <wait.h>
 
 
-int sfind(const char *searchedText, const char pathname[], const char command[], const char searchParameter[]);
+int sfind(const char *searchedText, const char pathname[], const char command[], const char searchParameter[], const char execute[]);
 
 
 

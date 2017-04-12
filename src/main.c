@@ -7,7 +7,7 @@
 //
 #include "sfind.h"
 
-void parseArguments(char *argv[]);
+void parseArguments(int argc, char *argv[]);
 
 
 void getCurrentPath(char path[]){
@@ -32,21 +32,22 @@ void getHomePath(char pathname[]){
 int main(int argc, char *argv[]) {
 
   //  Check for invalid arguments
-  if (argc >= 4 && argc < 6 && argv[1] != NULL && argv[2] != NULL && argv[3] != NULL && argv[4] != NULL) {
-    parseArguments(argv);
+  if (argc >= 4 && argv[1] != NULL && argv[2] != NULL && argv[3] != NULL && argv[4] != NULL) {
+    parseArguments(argc, argv);
   } else {
     printf("Usage: sfind [ '.', '/', '~' ] ['-name', '-type', '-perm'] [file] ['-print', '-delete', '-exec']\n");
     exit(1);
   }
 }
 
-void parseArguments(char *argv[]){
+void parseArguments(int argc, char *argv[]){
   char pathname[1024];
   //  arguments to parse
   char *searchDirectory = argv[1];
   char *searchParameter = argv[2];
   char *fileName = argv[3];
   char *command = argv[4];
+  char *execute;
 
   //  Directory '.','/','~'
   if (strcmp(searchDirectory, DIR_CURRENT) == 0){
@@ -106,12 +107,28 @@ void parseArguments(char *argv[]){
   else if (strcmp(command, CMD_DELETE) == 0){
 
   }
-  else if (strcmp(command, CMD_EXECUTE) == 0){} else {
-    printf("Invalid command: possibles: '%s' '%s' '%s'\n",CMD_PRINT,CMD_DELETE, CMD_EXECUTE);
+  else if (strcmp(command, CMD_EXECUTE) == 0){
+    int i = 5;
+    char newCommand[1024] = "";
+    execute = argv[5];
+
+    while (i < argc){
+      strcat(newCommand, argv[i]);
+      strcat(newCommand, " ");
+      i++;
+    }
+
+    strcpy(execute, newCommand);
+
+    if((execute == NULL)) {
+      printf("Function is empty, usage is: -exec 'function'\n");
+      exit(1);
+    }
+  } else {
+    printf("Invalid command: possibles: '%s' '%s' '%s command'\n",CMD_PRINT,CMD_DELETE, CMD_EXECUTE);
     exit(1);
   }
 
   //  start search
-  printf("Sarch start at path: %s\n", pathname);
-  sfind(fileName, searchDirectory, command, searchParameter);
+  sfind(fileName, searchDirectory, command, searchParameter, execute);
 }

@@ -11,10 +11,42 @@ void createSubpath(const char *originalPath, struct dirent *directory, char *fin
   strcpy(finalPath, newPath);
 }
 
+void str_replace(char *target, const char *needle, const char *replacement){
+    char buffer[1024] = { 0 };
+    char *insert_point = &buffer[0];
+    const char *tmp = target;
+    size_t needle_len = strlen(needle);
+    size_t repl_len = strlen(replacement);
+
+    while (1) {
+        const char *p = strstr(tmp, needle);
+
+        // walked past last occurrence of needle; copy remaining part
+        if (p == NULL) {
+            strcpy(insert_point, tmp);
+            break;
+        }
+
+        // copy part before needle
+        memcpy(insert_point, tmp, p - tmp);
+        insert_point += p - tmp;
+
+        // copy replacement string
+        memcpy(insert_point, replacement, repl_len);
+        insert_point += repl_len;
+
+        // adjust pointers, move on
+        tmp = p + needle_len;
+    }
+
+    // write altered string back to target
+    strcpy(target, buffer);
+}
+
 /**
 *  Founded file action handler
 */
-void handleFoundFile(struct dirent dirent, const char path[], const char command[]){
+void handleFoundFile(struct dirent dirent, const char path[], const char command[], const char execute[]){
   char newPath[1024];
 
   //  Create new path
@@ -26,9 +58,16 @@ void handleFoundFile(struct dirent dirent, const char path[], const char command
   else if (strcmp(command, "-delete") == 0){
     remove(newPath);
   }
+  else if (strcmp(command, "-exec") == 0) {
+    char* newExecCommand = (char*)execute;
+
+    str_replace(newExecCommand, "{}", newPath);
+
+    system(newExecCommand);
+  }
 }
 
-void handleFork(const char *searchedText,const char pathname[], const char command[], const char searchParameter[]){
+void handleFork(const char *searchedText,const char pathname[], const char command[], const char searchParameter[], const char execute[]){
   //  FORK process
   pid_t pid = fork();
 
@@ -42,7 +81,7 @@ void handleFork(const char *searchedText,const char pathname[], const char comma
     waitpid(pid, &status, 0);
   } else  if (pid == 0){
     /* child*/
-    sfind(searchedText, pathname, command, searchParameter);
+    sfind(searchedText, pathname, command, searchParameter, execute);
   }
 }
 
@@ -82,18 +121,18 @@ int isStatPerm(const struct stat stat, const char *searchedText){
   }
 }
 
-void fileLogic(const char *searchedText, const char pathname[], const char command[], const char searchParameter[], struct dirent *dirent, struct stat statsbuf){
+void fileLogic(const char *searchedText, const char pathname[], const char command[], const char searchParameter[], struct dirent *dirent, struct stat statsbuf, const char execute[]){
   //  If dirent name is equal searched name text, handle it.
   if (strcmp(PARAM_NAME, searchParameter)== 0 && strcmp(dirent->d_name, (char*)searchedText) == 0) {
-    handleFoundFile(*dirent, pathname, command);
+    handleFoundFile(*dirent, pathname, command, execute);
   }
   //  If dirent type is equal file searched type
   else if (strcmp(PARAM_TYPE, searchParameter) == 0 && isStatType(statsbuf, searchedText)) {
-    handleFoundFile(*dirent, pathname, command);
+    handleFoundFile(*dirent, pathname, command, execute);
   }
   //  If dirent perm is equal file searched perm
   else if (strcmp(PARAM_PERM, searchParameter) == 0 && isStatPerm(statsbuf, searchedText)){
-    handleFoundFile(*dirent, pathname, command);
+    handleFoundFile(*dirent, pathname, command, execute);
   }
   //  Check if dirent is a directory, and is diferent from "." and ".."
   if (S_ISDIR(statsbuf.st_mode) && strcmp(dirent->d_name, "..") != 0 && strcmp(dirent->d_name, ".") != 0){
@@ -103,11 +142,11 @@ void fileLogic(const char *searchedText, const char pathname[], const char comma
 
     createSubpath(pathname, dirent, filePath);
 
-    handleFork(searchedText, filePath, command, searchParameter);
+    handleFork(searchedText, filePath, command, searchParameter, execute);
   }
 }
 
-int sfind(const char *searchedText, const char pathname[], const char command[], const char searchParameter[]){
+int sfind(const char *searchedText, const char pathname[], const char command[], const char searchParameter[], const char execute[]){
   struct dirent *dirent = NULL;
   struct stat statbuf;
   DIR *directory;
@@ -121,7 +160,7 @@ int sfind(const char *searchedText, const char pathname[], const char command[],
   //  change directory to actual path
   chdir(pathname);
 
-  //  Read directory file
+  //  Read directory files
   while ((dirent = readdir(directory)) != NULL) {
   //  printf("Analyzing: %s/%s\n", pathname, dirent->d_name);
 
@@ -131,7 +170,7 @@ int sfind(const char *searchedText, const char pathname[], const char command[],
       perror("stat() error");
     } else {
       //  File could be read
-      fileLogic(searchedText, pathname, command, searchParameter, dirent, statbuf);
+      fileLogic(searchedText, pathname, command, searchParameter, dirent, statbuf, execute);
     }
   }
 
