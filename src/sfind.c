@@ -18,8 +18,6 @@ void handleFoundFile(struct dirent dirent, const char path[], const char command
   else if (strcmp(command, "-delete") == 0){
     remove(newPath);
   }
-
-  //exit(0);
 }
 
 void createSubpath(const char *originalPath, struct dirent *directory, char *finalPath){
@@ -50,49 +48,61 @@ void handleFork(const unsigned char *searchedText,const char pathname[], const c
   }
 }
 
+void fileLogic(const unsigned char *searchedText, const char pathname[], const char command[], const char searchParameter[], struct dirent *dirent, struct stat statsbuf){
+  //  If dirent name is equal searched name text, handle it.
+  if (strcmp(PARAM_NAME, searchParameter)== 0 && strcmp(dirent->d_name, (char*)searchedText) == 0) {
+    handleFoundFile(*dirent, pathname, command);
+  }
+  //  If dirent type is equal file searched type
+  else if (strcmp(PARAM_TYPE, searchParameter) == 0 && dirent->d_type == *searchedText) {
+    handleFoundFile(*dirent, pathname, command);
+  }
+  //  If dirent perm is equal file searched perm
+  else if (strcmp(PARAM_PERM, searchParameter) == 0 ){
+    /* code */
+    //  fstt
+
+    printf("%o %lo\n", (statsbuf.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO)), strtoul((char*)searchedText, (char**)&searchedText, 8));
+  }
+  //  Check if dirent is a directory, and is diferent from "." and ".."
+  else if (S_ISDIR(statsbuf.st_mode) && (!S_ISLNK(statsbuf.st_mode)) && strcmp(dirent->d_name, "..") != 0 && strcmp(dirent->d_name, ".") != 0){
+    //  Found a directory, search in directory
+    //  create file path
+    char filePath[1024];
+    createSubpath(pathname, dirent, filePath);
+
+    handleFork(searchedText, filePath, command, searchParameter);
+  }
+}
+
 int sfind(const unsigned char *searchedText, const char pathname[], const char command[], const char searchParameter[]){
   struct dirent *dirent = NULL;
+  struct stat statbuf;
+  DIR *directory;
 
   //  Open directory
-  DIR *directory = opendir(pathname);
-
-  if (directory != NULL)
-  {
-    //printf("Directory opened\n");
+  if((directory = opendir(pathname)) == NULL){
+    perror("opendir() error");
+    exit(1);
   }
-  else
-  perror("opendir() error");
+
+  //  change directory to actual path
+  chdir(pathname);
 
   //  Read directory file
+  while ((dirent = readdir(directory)) != NULL) {
+  //  printf("Analyzing: %s/%s\n", pathname, dirent->d_name);
 
-  while ((dirent = readdir(directory))) {
-
-    //  If dirent name is equal searched name text, handle it.
-    if (strcmp(PARAM_NAME, searchParameter)== 0 && strcmp(dirent->d_name, (char*)searchedText) == 0) {
-        handleFoundFile(*dirent, pathname, command);
+    //  Read file status
+    if (lstat(dirent->d_name, &statbuf) == -1) {
+      //  File couldn't be read
+      perror("stat() error");
+    } else {
+      //  File could be read
+      fileLogic(searchedText, pathname, command, searchParameter, dirent, statbuf);
     }
-    //  If dirent type is equal file searched type
-    else if (strcmp(PARAM_TYPE, searchParameter) == 0 && dirent->d_type == *searchedText) {
-      handleFoundFile(*dirent, pathname, command);
-    }
-
-    //  Check if dirent is a directory, and is diferent from "." and ".."
-    else if (dirent->d_type == DT_DIR &&
-      strcmp(dirent->d_name, "..") != 0 &&
-      strcmp(dirent->d_name, ".") != 0){
-        //  Found a directory, search in directory
-        char newPath[1024];
-
-        //  Create new path
-        strcpy(newPath, pathname);
-        strcat(newPath, "/");
-        strcat(newPath, dirent->d_name);
-
-        //  Search in new path recursively
-        handleFork(searchedText, newPath, command, searchParameter);
-      }
-    }
-
-    closedir(directory);
-    exit(0);
   }
+
+  closedir(directory);
+  exit(0);
+}
