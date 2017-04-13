@@ -15,6 +15,7 @@
 #include <dirent.h>
 #include "options.h"
 #include <wait.h>
+#include <signal.h>
 
 
 int sfind(const char *searchedText, const char pathname[], const char command[], const char searchParameter[], const char execute[]);

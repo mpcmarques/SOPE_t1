@@ -29,7 +29,35 @@ void getHomePath(char pathname[]){
   strcpy(pathname, info->pw_dir);
 }
 
+static void sig_usr(int signo){
+  //  Check if received signal is SIGINT
+ if (signo == SIGINT){
+
+   char opt;
+   // Ask user to terminate program
+  printf("Are you sure you want to terminate (Y/N)?\n");
+  scanf("%c", &opt);
+
+  if (opt == 'Y') {
+    exit(0);
+  }
+  else if (opt == 'N') {
+    printf("Resuming program...\n");
+    sleep(1);
+  } else {
+    printf("Input is not valid, resuming program in 2 seconds...\n");
+    sleep(2);
+  }
+
+  }
+ return;
+}
+
 int main(int argc, char *argv[]) {
+  if (signal(SIGINT, sig_usr) == SIG_ERR) {
+    fprintf(stderr, "can't catch SIGINT\n");
+    exit(1);
+  }
 
   //  Check for invalid arguments
   if (argc >= 4 && argv[1] != NULL && argv[2] != NULL && argv[3] != NULL && argv[4] != NULL) {

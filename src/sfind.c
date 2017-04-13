@@ -52,6 +52,7 @@ void handleFork(const char *searchedText,const char pathname[], const char comma
   } else  if (pid == 0){
     /* child*/
     sfind(searchedText, pathname, command, searchParameter, execute);
+    exit(0);
   }
 }
 
