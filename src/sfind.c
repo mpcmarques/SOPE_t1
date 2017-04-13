@@ -48,9 +48,6 @@ void handleFoundFile(struct dirent dirent, const char path[], const char command
 void handleFork(const char *searchedText,const char pathname[], const char command[], const char searchParameter[], const char execute[]){
   //  FORK process
   pid_t pid = fork();
-  sigset_t sigset;
-  sigemptyset(&sigset);
-  sigaddset(&sigset, SIGINT);
 
   if (pid < 0 ) {
     perror("error forking");
@@ -58,18 +55,14 @@ void handleFork(const char *searchedText,const char pathname[], const char comma
 
   } else if (pid > 0) {
     /* parent */
-    if (sigprocmask(SIG_BLOCK, &sigset, NULL)){
-      perror("sigprocmask");
-    }
-
     int status;
     waitpid(pid, &status, 0);
 
-    if (sigprocmask(SIG_UNBLOCK, &sigset, NULL)){
-      perror("sigprocmask");
-    }
-
   } else  if (pid == 0){
+    /* child */
+    //  remove SIGINT signal from child process
+    signal(SIGINT, SIG_DFL);
+    //  call find recursively
     sfind(searchedText, pathname, command, searchParameter, execute);
     exit(0);
   }

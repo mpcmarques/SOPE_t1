@@ -40,14 +40,16 @@ static void sig_usr(int signo){
   scanf("%c", &opt);
 
   if (opt == 'Y') {
-    exit(0);
+    raise(SIGKILL);
   }
   else if (opt == 'N') {
     printf("Resuming program...\n");
     sleep(1);
+    raise(SIGCONT);
   } else {
     printf("Input is not valid, resuming program in 2 seconds...\n");
     sleep(2);
+    raise(SIGCONT);
   }
   }
  return;
@@ -165,6 +167,6 @@ void parseArguments(int argc, char *argv[]){
     exit(1);
   }
 
-  //  start search  
+  //  start search
   sfind(fileName, pathname, command, searchParameter, execute);
 }
