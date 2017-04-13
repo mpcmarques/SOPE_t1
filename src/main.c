@@ -111,21 +111,27 @@ void parseArguments(int argc, char *argv[]){
     int i = 5;
     char newCommand[1024] = "";
     execute = argv[5];
+    int isCommandValid = 0;
 
     while (i < argc){
       strcat(newCommand, argv[i]);
       strcat(newCommand, " ");
+      //  command need to finish with ;
+      if (strcmp(argv[i], ";") == 0){
+        isCommandValid = 1;
+      }
       i++;
     }
 
+    //  execute = newCommand
     strcpy(execute, newCommand);
 
-    if((execute == NULL)) {
-      printf("Function is empty, usage is: -exec 'function'\n");
+    if((execute == NULL) || !isCommandValid) {
+      printf("Function is empty, usage is: -exec command \\;\n");
       exit(1);
     }
   } else {
-    printf("Invalid command: possibles: '%s' '%s' '%s command'\n",CMD_PRINT,CMD_DELETE, CMD_EXECUTE);
+    printf("Invalid command: possibles: '%s' '%s' '%s command \\;\n",CMD_PRINT,CMD_DELETE, CMD_EXECUTE);
     exit(1);
   }
 

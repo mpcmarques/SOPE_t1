@@ -31,7 +31,9 @@ void handleFoundFile(struct dirent dirent, const char path[], const char command
     //  Replace '{}' ocurrencies with file path
     str_replace(newExecCommand, "{}", newPath);
     //  Execute system command
-    system(newExecCommand);
+    if (system(newExecCommand) != 0) {
+        exit(1);
+    }
   }
 }
 
