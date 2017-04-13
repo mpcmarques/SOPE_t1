@@ -30,6 +30,7 @@ void getHomePath(char pathname[]){
 }
 
 static void sig_usr(int signo){
+
   //  Check if received signal is SIGINT
  if (signo == SIGINT){
 
@@ -48,16 +49,17 @@ static void sig_usr(int signo){
     printf("Input is not valid, resuming program in 2 seconds...\n");
     sleep(2);
   }
-
   }
  return;
 }
 
 int main(int argc, char *argv[]) {
-  if (signal(SIGINT, sig_usr) == SIG_ERR) {
-    fprintf(stderr, "can't catch SIGINT\n");
-    exit(1);
-  }
+  struct sigaction action;
+  //  setup signal action
+  action.sa_handler = sig_usr;
+  sigemptyset(&action.sa_mask);
+  action.sa_flags = 0;
+  sigaction(SIGINT, &action, NULL);
 
   //  Check for invalid arguments
   if (argc >= 4 && argv[1] != NULL && argv[2] != NULL && argv[3] != NULL && argv[4] != NULL) {
@@ -163,6 +165,6 @@ void parseArguments(int argc, char *argv[]){
     exit(1);
   }
 
-  //  start search
-  sfind(fileName, searchDirectory, command, searchParameter, execute);
+  //  start search  
+  sfind(fileName, pathname, command, searchParameter, execute);
 }

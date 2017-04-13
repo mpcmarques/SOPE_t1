@@ -1,6 +1,8 @@
 #include "sfind.h"
 
-
+/**
+* Creates a subpath
+*/
 void createSubpath(const char *originalPath, struct dirent *directory, char *finalPath){
   char newPath[1024];
   //  Create new path
@@ -27,9 +29,12 @@ void handleFoundFile(struct dirent dirent, const char path[], const char command
     remove(newPath);
   }
   else if (strcmp(command, CMD_EXECUTE) == 0) {
-    char* newExecCommand = (char*)execute;
+    char newExecCommand[1024];
+    strcpy(newExecCommand, execute);
+
     //  Replace '{}' ocurrencies with file path
     str_replace(newExecCommand, "{}", newPath);
+
     //  Execute system command
     if (system(newExecCommand) != 0) {
         exit(1);
@@ -37,9 +42,15 @@ void handleFoundFile(struct dirent dirent, const char path[], const char command
   }
 }
 
+/**
+* Handle fork action
+*/
 void handleFork(const char *searchedText,const char pathname[], const char command[], const char searchParameter[], const char execute[]){
   //  FORK process
   pid_t pid = fork();
+  sigset_t sigset;
+  sigemptyset(&sigset);
+  sigaddset(&sigset, SIGINT);
 
   if (pid < 0 ) {
     perror("error forking");
@@ -47,10 +58,18 @@ void handleFork(const char *searchedText,const char pathname[], const char comma
 
   } else if (pid > 0) {
     /* parent */
+    if (sigprocmask(SIG_BLOCK, &sigset, NULL)){
+      perror("sigprocmask");
+    }
+
     int status;
     waitpid(pid, &status, 0);
+
+    if (sigprocmask(SIG_UNBLOCK, &sigset, NULL)){
+      perror("sigprocmask");
+    }
+
   } else  if (pid == 0){
-    /* child*/
     sfind(searchedText, pathname, command, searchParameter, execute);
     exit(0);
   }
@@ -112,6 +131,8 @@ void fileLogic(const char *searchedText, const char pathname[], const char comma
     char filePath[1024];
 
     createSubpath(pathname, dirent, filePath);
+
+    //printf("%s\n", filePath);
 
     handleFork(searchedText, filePath, command, searchParameter, execute);
   }
