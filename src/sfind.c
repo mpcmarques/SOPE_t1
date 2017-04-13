@@ -37,7 +37,7 @@ void handleFoundFile(struct dirent dirent, const char path[], const char command
 
     //  Execute system command
     if (system(newExecCommand) != 0) {
-        exit(1);
+      exit(1);
     }
   }
 }
@@ -52,7 +52,7 @@ void handleFork(const char *searchedText,const char pathname[], const char comma
   if (pid < 0 ) {
     perror("error forking");
     abort();
-
+    
   } else if (pid > 0) {
     /* parent */
     int status;
@@ -147,7 +147,7 @@ int sfind(const char *searchedText, const char pathname[], const char command[],
 
   //  Read directory files
   while ((dirent = readdir(directory)) != NULL) {
-  //  printf("Analyzing: %s/%s\n", pathname, dirent->d_name);
+    //  printf("Analyzing: %s/%s\n", pathname, dirent->d_name);
 
     //  Read file status
     if (lstat(dirent->d_name, &statbuf) == -1) {

@@ -30,29 +30,27 @@ void getHomePath(char pathname[]){
 }
 
 static void sig_usr(int signo){
-
   //  Check if received signal is SIGINT
- if (signo == SIGINT){
+  if (signo == SIGINT){
+    char opt;
+    // Ask user to terminate program
+    printf("\nAre you sure you want to terminate (Y/N)?\n");
+    scanf("%c", &opt);
 
-   char opt;
-   // Ask user to terminate program
-  printf("Are you sure you want to terminate (Y/N)?\n");
-  scanf("%c", &opt);
-
-  if (opt == 'Y') {
-    raise(SIGKILL);
+    if (opt == 'Y') {
+      raise(SIGKILL);
+    }
+    else if (opt == 'N') {
+      printf("Resuming program...\n");
+      sleep(1);
+      raise(SIGCONT);
+    } else {
+      printf("Input is not valid, resuming program in 1 second...\n");
+      sleep(1);
+      raise(SIGCONT);
+    }
   }
-  else if (opt == 'N') {
-    printf("Resuming program...\n");
-    sleep(1);
-    raise(SIGCONT);
-  } else {
-    printf("Input is not valid, resuming program in 2 seconds...\n");
-    sleep(2);
-    raise(SIGCONT);
-  }
-  }
- return;
+  return;
 }
 
 int main(int argc, char *argv[]) {
