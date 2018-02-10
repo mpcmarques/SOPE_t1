@@ -1,4 +1,6 @@
-# sfind - primeiro projeto de SOPE - Sistemas Operativos - FEUP 2016
+# sfind
+
+## Primeiro projeto de SOPE (Sistemas Operativos) - FEUP 2016
 
 ## Programa imita a função find do linux.
 
