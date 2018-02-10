@@ -1,12 +1,11 @@
 # sfind
 
-
-Criado por Mateus Pedroza
-Programa imita a função find do linux.
+## Programa imita a função find do linux.
 
 
-Exemplos de invocação com find:
+### Exemplos de invocação com find:
 
+```
 shell> find ~ -name lixo.txt -print
 /home/user/tmp/lixo.txt
 /home/user/mbin/myscanf/tmp/lixo.txt
@@ -26,3 +25,4 @@ shell> find . -type l -print
 shell> find / -perm 0400 -print
 /bak/multimedia/figs/bear.jpg
 /bak/multimedia/figs/cubs.jpg
+```
